@@ -68,13 +68,7 @@ BookingItem.belongsTo(Room, { foreignKey: 'roomId', as: 'room' });
 RoomType.hasMany(Room, { foreignKey: 'roomTypeId', as: 'rooms' });
 Room.belongsTo(RoomType, { foreignKey: 'roomTypeId', as: 'roomType' });
 
-SupportTicket.belongsTo(User, { as: 'requester', foreignKey: 'customerId' });   // người tạo yêu cầu
-SupportTicket.belongsTo(User, { as: 'handler',   foreignKey: 'employeeId', allowNull: true }); // nhân viên xử lý
-SupportTicket.hasMany(SupportMessage, { as: 'messages', foreignKey: 'ticketId' });
 
-// SupportMessage
-SupportMessage.belongsTo(SupportTicket, { as: 'ticket', foreignKey: 'ticketId' });
-SupportMessage.belongsTo(User, { as: 'sender', foreignKey: 'senderId' });
 
 // sequelize.sync() // Dùng sync thay vì alter để an toàn hơn
 //     .then(() => {
