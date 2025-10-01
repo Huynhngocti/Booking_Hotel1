@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html, :host {
+        text-size-adjust: 100%;        /* Chuẩn: Chrome/Edge/Firefox/Safari mới */
+        -webkit-text-size-adjust: 100%;/* Safari/iOS cũ */
+        -ms-text-size-adjust: 100%;    /* IE/Edge cũ (vô hại nếu thừa) */
+    }
+
+    html {
+        overflow-y: scroll;             /* Giữ thanh cuộn dọc luôn ổn định */
+    }
+}
