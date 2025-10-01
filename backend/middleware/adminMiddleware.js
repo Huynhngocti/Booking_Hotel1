@@ -1,13 +1,17 @@
 export const verifyAdmin = (req, res, next) => {
-    console.log('Verify Admin: req.user:', req.user);
-    console.log('Verify Admin: req.user.role:', req.user?.role); 
-
-    // Điều kiện kiểm tra role
-    if (req.user && req.user.role === 'admin') { 
-        console.log('Verify admin: User is admin (role), proceeding.'); 
-        next(); 
+    // Middleware này CHỈ cho phép 'admin'
+    if (req.user && req.user.role === 'admin') {
+        next();
     } else {
-        console.log('Verify admin: Access forbidden. User role:', req.user?.role); 
-        res.status(403).json({ message: 'Yêu cầu quyền admin.' });
+        res.status(403).json({ message: 'Yêu cầu quyền Admin.' });
+    }
+};
+
+export const verifyEmployee = (req, res, next) => {
+    // Middleware này cho phép cả 'employee' và 'admin'
+    if (req.user && (req.user.role === 'employee' || req.user.role === 'admin')) {
+        next(); // Nếu đúng vai trò, cho đi tiếp
+    } else {
+        res.status(403).json({ message: 'Yêu cầu quyền Nhân viên để thực hiện hành động này.' });
     }
 };

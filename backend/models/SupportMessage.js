@@ -11,10 +11,4 @@ const SupportMessage = sequelize.define("SupportMessage", {
     underscored: true,
 });
 
-SupportMessage.belongsTo(SupportTicket, { as: "ticket", foreignKey: "ticketId" });
-SupportTicket.hasMany(SupportMessage, { as: "messages", foreignKey: "ticketId" });
-
-SupportMessage.belongsTo(User, { as: "sender", foreignKey: "senderId" });
-User.hasMany(SupportMessage, { as: "sentMessages", foreignKey: "senderId" });
-
 export default SupportMessage;

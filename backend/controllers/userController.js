@@ -1,9 +1,9 @@
 import { Op } from 'sequelize';
-import User from '../models/User.js';
-import Customer from '../models/Customer.js';
-import sequelize from '../config/db.js';
+import db from '../models/index.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+
+const { User, Customer, sequelize } = db;
 
 export const getMe = async (req, res) => {
     try {

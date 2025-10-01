@@ -1,16 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import sequelize from './config/db.js';
-
-// Import các models
-import User from './models/User.js';
-import Customer from './models/Customer.js';
-import Booking from './models/Booking.js';
-import BookingItem from './models/BookingItem.js';
-import Room from './models/Room.js';
-import RoomType from './models/RoomType.js';
-import Review from './models/Review.js';
 
 //Import các routes
 import authRoutes from './routes/authRoutes.js';
@@ -43,31 +33,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
 
 const PORT = process.env.PORT || 5000;
-
-// User <-> Customer (Một-Một)
-User.hasOne(Customer, { foreignKey: 'userId', as: 'customer' });
-Customer.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-
-// Customer <-> Booking (Một-Nhiều)
-Customer.hasMany(Booking, { foreignKey: 'customerId', as: 'bookings' });
-Booking.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' });
-
-// Booking <-> BookingItem (Một-Nhiều)
-Booking.hasMany(BookingItem, { foreignKey: 'bookingId', as: 'items' });
-BookingItem.belongsTo(Booking, { foreignKey: 'bookingId', as: 'booking' });
-
-// Room <-> Review (1-1)
-Booking.hasOne(Review, { foreignKey: 'bookingId', as: 'review' });
-Review.belongsTo(Booking, { foreignKey: 'bookingId', as: 'booking' });
-
-// Room <-> BookingItem (Một-Nhiều)
-Room.hasMany(BookingItem, { foreignKey: 'roomId', as: 'bookingItems' });
-BookingItem.belongsTo(Room, { foreignKey: 'roomId', as: 'room' });
-
-// RoomType <-> Room (Một-Nhiều)
-RoomType.hasMany(Room, { foreignKey: 'roomTypeId', as: 'rooms' });
-Room.belongsTo(RoomType, { foreignKey: 'roomTypeId', as: 'roomType' });
-
 
 
 // sequelize.sync() // Dùng sync thay vì alter để an toàn hơn

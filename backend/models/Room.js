@@ -17,4 +17,5 @@ const Room = sequelize.define('Room', {
   tableName: 'room'
 });
 
+
 export default Room;

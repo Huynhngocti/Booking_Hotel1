@@ -14,4 +14,6 @@ const Review=sequelize.define('Review',{
     timestamps:true,
     tableName:'review'
 });
+
+
 export default Review;

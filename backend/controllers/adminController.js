@@ -1,5 +1,11 @@
 import Customer from '../models/Customer.js';
 import User from '../models/User.js';
+import Booking from '../models/Booking.js';
+import db from '../models/index.js';
+import { Op, fn, col, where } from 'sequelize';
+
+const { sequelize } = db;
+
 
 // Lấy tất cả người dùng
 export const getAllUsers = async (req, res) => {
@@ -68,5 +74,63 @@ export const updateUser = async (req, res) => {
     } catch (error) {
         console.error("Lỗi khi cập nhật người dùng:", error);
         res.status(500).json({ message: "Lỗi server khi cập nhật" });
+    }
+};
+
+export const getAllBookingsAdmin = async (req, res) => {
+    try {
+        const { status, customerName, checkInDate } = req.query;
+
+        let userWhereClause = {}; // Khởi tạo rỗng
+
+        // --- SỬA LẠI LOGIC TÌM KIẾM TÊN Ở ĐÂY ---
+        if (customerName) {
+            // Dùng hàm của Sequelize để ghép cột và tìm kiếm
+            // Nó sẽ tạo ra câu lệnh SQL: WHERE CONCAT(first_name, ' ', last_name) LIKE '%tên người dùng%'
+            userWhereClause = where(
+                fn('CONCAT', col('first_name'), ' ', col('last_name')),
+                { [Op.like]: `%${customerName}%` }
+            );
+        }
+
+        const whereClause = {};
+        if (status) {
+            whereClause.status = status;
+        }
+        if (checkInDate) {
+            whereClause.checkInDate = { [Op.gte]: new Date(checkInDate) };
+        }
+        
+        const bookings = await Booking.findAll({
+            where: whereClause,
+            order: [['checkInDate', 'DESC']],
+            include: [
+                {
+                    association: 'customer',
+                    required: true,
+                    include: {
+                        association: 'user',
+                        where: userWhereClause, // Áp dụng điều kiện tìm kiếm tên
+                        attributes: ['firstName', 'lastName', 'email'],
+                        required: true,
+                    }
+                },
+                {
+                    association: 'items',
+                    required: true,
+                    include: {
+                        association: 'room',
+                        include: {
+                            association: 'roomType',
+                            attributes: ['name']
+                        }
+                    }
+                }
+            ]
+        });
+        res.status(200).json(bookings);
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách booking cho admin:", error);
+        res.status(500).json({ message: "Lỗi server" });
     }
 };

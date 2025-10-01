@@ -1,7 +1,5 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/db.js';
-import Customer from './Customer.js';
-import Discount from './Discount.js';
 
 const Booking = sequelize.define('Booking', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -11,10 +9,14 @@ const Booking = sequelize.define('Booking', {
   totalGuests: { type: DataTypes.SMALLINT, allowNull: false },
   totalAmount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, field: 'total_amount' },
   specialRequests: DataTypes.TEXT,
-  status: { type: DataTypes.ENUM('Pending', 'Confirmed', 'Cancelled', 'Completed'), defaultValue: 'Pending', allowNull: false },
+   status: { 
+    type: DataTypes.ENUM('Pending', 'Confirmed', 'CheckedIn', 'Completed', 'Cancelled'),
+    defaultValue: 'Pending', 
+    allowNull: false 
+},
   bookingSource: { type: DataTypes.ENUM('Website', 'Mobile App', 'Phone', 'Agent'), defaultValue: 'Website', allowNull: false },
-  customerId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Customer, key: 'id' } },
-  discountId: { type: DataTypes.INTEGER, allowNull: true, references: { model: Discount, key: 'id' } },
+  customerId: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'Customers', key: 'id' } },
+  discountId: { type: DataTypes.INTEGER, allowNull: true, references: { model: 'discounts', key: 'id' } },
   isHidden: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -24,5 +26,6 @@ const Booking = sequelize.define('Booking', {
   timestamps: true,
   tableName: 'booking'
 });
+
 
 export default Booking;

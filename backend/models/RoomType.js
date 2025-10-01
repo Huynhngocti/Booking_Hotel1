@@ -13,4 +13,5 @@ const RoomType = sequelize.define('RoomType', {
   timestamps: true,
 });
 
+
 export default RoomType;

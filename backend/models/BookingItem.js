@@ -14,4 +14,5 @@ const BookingItem = sequelize.define('BookingItem', {
   timestamps: true,
 });
 
+
 export default BookingItem;
