@@ -14,7 +14,7 @@ const BookingModal = ({ roomType, onClose, onSuccess }) => {
     };
 
     // State lưu ngày check-in tối thiểu
-    const [minCheckIn, setMinCheckIn] = useState(getMinCheckInDate);
+    const minCheckIn = getMinCheckInDate();
     
     // Các state khác của component
     const [checkInDate, setCheckInDate] = useState('');
@@ -72,15 +72,34 @@ const BookingModal = ({ roomType, onClose, onSuccess }) => {
         };
 
         try {
-            const response = await api.post('/bookings', bookingData);
-            onSuccess(response.data.message || 'Đặt phòng thành công!');
-            onClose();
+            // Bước 1: Tạo đơn hàng với trạng thái "Pending"
+            const bookingResponse = await api.post('/bookings', bookingData);
+            const { booking } = bookingResponse.data;
+
+            if (!booking || !booking.id) {
+                throw new Error("Không thể tạo đơn đặt phòng.");
+            }
+
+            // Bước 2: Dùng booking.id để tạo URL thanh toán
+            const paymentResponse = await api.post('/payment/create-payment-url', {
+                bookingId: booking.id
+            });
+            const { paymentUrl } = paymentResponse.data;
+
+            // Bước 3: Chuyển hướng người dùng đến cổng thanh toán
+            if (paymentUrl) {
+                window.location.href = paymentUrl;
+            } else {
+                 throw new Error("Không thể lấy địa chỉ thanh toán.");
+            }
+            
+            // Các hàm onSuccess, onClose không còn cần thiết ở đây nữa vì trang sẽ được chuyển hướng
         } catch (err) {
             const errorMsg = err.response?.data?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
             setError(errorMsg);
-        } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Dừng loading nếu có lỗi
         }
+        // Không cần khối finally nữa
     };
 
     return (
@@ -89,7 +108,7 @@ const BookingModal = ({ roomType, onClose, onSuccess }) => {
                 <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800">{roomType.name}</h2>
-                        <p className="text-gray-500">Hoàn tất thông tin đặt phòng</p>
+                        <p className="text-gray-500">Hoàn tất thông tin để tiến hành thanh toán</p>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <FaTimes size={24} />
@@ -129,7 +148,7 @@ const BookingModal = ({ roomType, onClose, onSuccess }) => {
                             disabled={isLoading || nights <= 0}
                             className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isLoading ? <FaSpinner className="animate-spin" /> : 'Xác Nhận Đặt Phòng'}
+                            {isLoading ? <FaSpinner className="animate-spin" /> : 'Tiến hành Thanh toán'}
                         </button>
                     </div>
                 </form>

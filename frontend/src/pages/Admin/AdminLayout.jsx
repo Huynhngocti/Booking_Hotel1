@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FaUserCog, FaHotel, FaBook, FaChevronDown, FaSignOutAlt, FaUsers } from 'react-icons/fa';
+import { FaUserCog, FaHotel, FaBook, FaChevronDown, FaSignOutAlt, FaUsers, FaUserShield, } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 const AdminLayout = () => {
@@ -47,6 +47,12 @@ const AdminLayout = () => {
                                         <li>
                                             <NavLink to="/admin/customers" className={({ isActive }) => `${navLinkClass} ${isActive ? activeClassName : inactiveClassName}`}>
                                                 <FaUsers className="ml-1" /> Khách hàng
+                                            </NavLink>
+                                        </li>
+
+                                        <li>
+                                            <NavLink to="/admin/employees" className={({ isActive }) => `${navLinkClass} ${isActive ? activeClassName : inactiveClassName}`}>
+                                                <FaUserShield className="ml-1" /> Nhân viên
                                             </NavLink>
                                         </li>
                                     </ul>

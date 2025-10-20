@@ -51,6 +51,9 @@ export async function login(req, res) {
         if (!user || !(await compare(password, user.password))) {
             return res.status(401).json({ message: 'Email hoặc mật khẩu không hợp lệ' });
         }
+        if (user.status !== 'Active') {
+            return res.status(403).json({ message: "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên." });
+        }
 
         const token = jwt.sign(
             { id: user.id, role: user.role },

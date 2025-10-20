@@ -12,7 +12,7 @@ const User = sequelize.define("User", {
   phone: { type: DataTypes.STRING, allowNull: true },
   avatar: { type: DataTypes.STRING, allowNull: true },
   role: { type: DataTypes.ENUM("customer", "employee", "admin") },
-  status: { type: DataTypes.ENUM("Active", "Inactive", "Pending"), defaultValue: "Pending" },
+  status: { type: DataTypes.ENUM("Active", "Inactive"), defaultValue: "Active" },
 
   resetPasswordToken: { type: DataTypes.STRING, allowNull: true },
   resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },

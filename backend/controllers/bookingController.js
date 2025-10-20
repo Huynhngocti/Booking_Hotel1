@@ -5,13 +5,13 @@ import BookingItem from '../models/BookingItem.js';
 import Customer from '../models/Customer.js';
 import Room from '../models/Room.js';
 import RoomType from '../models/RoomType.js';
+import User from '../models/User.js';
 
 
 export async function createBooking(req, res) {
     const { roomTypeId, checkInDate, checkOutDate, totalGuests } = req.body;
     const userId = req.user?.id;
 
-    // --- ✅ 1. THÊM LẠI KHỐI VALIDATION CÒN THIẾU ---
     if (!userId) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -90,7 +90,7 @@ export async function createBooking(req, res) {
             checkOutDate: checkOut,
             totalGuests,
             totalAmount,
-            status: 'Confirmed',
+            status: 'Pending',
         }, { transaction: t });
 
         await BookingItem.create({
@@ -103,7 +103,7 @@ export async function createBooking(req, res) {
         // Không cần update status phòng nữa
         
         await t.commit();
-        res.status(201).json({ message: 'Đặt phòng thành công!', booking: newBooking });
+        res.status(201).json({ message: 'Đơn hàng đã được tạo, vui lòng tiến hành thanh toán.', booking: newBooking });
 
     } catch (error) {
         await t.rollback();
@@ -120,35 +120,37 @@ export const getMyBookings = async (req, res) => {
             return res.status(200).json([]);
         }
 
-        const bookings = await Booking.findAll({ 
-            where: { customerId: customer.id, isHidden: false, },
-            order: [['checkInDate', 'DESC']], 
-            
-            include: [
-                {
-                    model: BookingItem,
-                    as: 'items',
-                    attributes: ['price', 'quantity'],
-                    include: [
-                        {
-                            model: Room,
-                            as: 'room',
-                            attributes: ['roomNumber', 'floor'],
-                            include: [
-                                {
-                                    model: RoomType,
-                                    as: 'roomType',
-                                    // ✅ FIX: Sửa "image_url" thành "photoUrl" cho khớp với model
-                                    attributes: ['name', 'photoUrl'] 
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        });
+        const bookings = await Booking.findAll({ 
+            where: { customerId: customer.id, isHidden: false },
+            order: [['checkInDate', 'DESC']], 
+            include: [
+                {
+                    model: BookingItem,
+                    as: 'items',
+                    // ... include cho Room và RoomType giữ nguyên ...
+                    include: [ 
+                        {
+                            model: Room,
+                            as: 'room',
+                            include: [{ model: RoomType, as: 'roomType' }]
+                        }
+                    ]
+                },
+                // ✅ THAY ĐỔI: Thêm include để lấy thông tin Customer và User
+                {
+                    model: Customer,
+                    as: 'customer',
+                    attributes: ['address'], // Lấy các trường cần thiết
+                    include: [{
+                        model: User,
+                        as: 'user',
+                        attributes: ['first_name', 'last_name', 'email', 'phone']
+                    }]
+                }
+            ]
+        });
 
-        res.status(200).json(bookings);
+        res.status(200).json(bookings);
 
     } catch (error) {
         console.error("Lỗi khi lấy đơn đặt phòng:", error);

@@ -10,6 +10,11 @@ import {
     FaTimesCircle,
     FaClock,
     FaConciergeBell,
+    FaUserFriends,
+    FaBed,
+    FaTag,
+    FaEnvelope,
+    FaPhone,
 } from "react-icons/fa";
 import api from "../../services/api";
 import toast from "react-hot-toast";
@@ -173,16 +178,83 @@ const StatusBadge = ({ text, icon: Icon, color }) => (
     </span>
 );
 
+// ====================================================================
+// == Component 1: BookingDetailsInline (Hiển thị chi tiết)          ==
+// ====================================================================
+const BookingDetailsInline = ({ booking }) => {
+    const nights = Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24));
+    const userInfo = booking?.customer?.user;
+    const roomTypeInfo = booking.items?.[0]?.room?.roomType;
+
+    return (
+        <div className="bg-gray-50 px-5 py-4 border-t-2 border-dashed border-gray-200">
+            <h4 className="font-bold text-lg text-gray-800 mb-4">Chi tiết đơn đặt phòng</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                <div>
+                    <h5 className="font-semibold text-gray-700 mb-2">Thông tin lưu trú</h5>
+                    <div className="space-y-3 text-sm">
+                        <DetailItem icon={FaUserFriends} label="Số khách" value={`${booking.totalGuests} người`} />
+                        <DetailItem icon={FaBed} label="Phòng số" value={booking.items?.[0]?.room?.roomNumber || 'N/A'} />
+                        <DetailItem icon={FaTag} label="Giá mỗi đêm" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(roomTypeInfo.basePrice)} />
+                        <p className="flex justify-between items-center font-bold pt-2 border-t mt-2">
+                           <span>Tổng cộng ({nights} đêm):</span>
+                           <span>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(booking.totalAmount)}</span>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <h5 className="font-semibold text-gray-700 mb-2">Thông tin người đặt</h5>
+                    {userInfo ? (
+                         <div className="space-y-3 text-sm">
+                            <DetailItem icon={FaUserFriends} label="Họ tên" value={`${userInfo.first_name} ${userInfo.last_name}`} />
+                            <DetailItem icon={FaEnvelope} label="Email" value={userInfo.email} />
+                            <DetailItem icon={FaPhone} label="Điện thoại" value={userInfo.phone} />
+                        </div>
+                    ) : <p>Không có thông tin.</p>}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// ====================================================================
+// == Component 2: DetailItem (Component phụ cho chi tiết)           ==
+// ====================================================================
+const DetailItem = ({ icon: Icon, label, value }) => (
+    <div className="flex items-center text-gray-600">
+        <Icon className="text-gray-400 mr-3 w-4 text-center" />
+        <span className="font-medium mr-2">{label}:</span>
+        <span className="text-gray-800">{value}</span>
+    </div>
+);
+
+
+// ====================================================================
+// == Component 3: BookingCard (Component chính) ==
+// ====================================================================
 const BookingCard = ({ booking, activeFilter, onCancel, onDelete }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const roomInfo = booking.items?.[0]?.room?.roomType;
     const roomName = roomInfo?.name || "Thông tin phòng không có sẵn";
     const roomImage = roomInfo?.photoUrl ? absoluteFromApi(roomInfo.photoUrl) : "https://via.placeholder.com/150";
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+        // Thẻ div chính của card. Ta sẽ không dùng overflow-hidden ở đây nữa.
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
             <div className="flex flex-col md:flex-row">
-                <img src={roomImage} alt={roomName} className="w-full md:w-48 h-48 md:h-auto object-cover" />
+                {/* SỬA ĐỔI CHÍNH: Bỏ div cha có overflow-hidden.
+                  Thay vào đó, ta bo tròn góc trực tiếp trên thẻ <img>.
+                  - rounded-t-lg: Bo tròn góc trên khi ở màn hình nhỏ.
+                  - md:rounded-l-lg: Bo tròn góc trái khi ở màn hình vừa và lớn.
+                  - md:rounded-tr-none: Bỏ bo tròn góc trên-phải ở màn hình lớn.
+                */}
+                <img 
+                    src={roomImage} 
+                    alt={roomName} 
+                    className="w-full md:w-48 h-48 md:h-auto object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none" 
+                />
                 <div className="p-5 flex flex-col flex-grow">
                     <div className="flex justify-between items-start">
                         <h3 className="font-bold text-xl text-gray-800">{roomName}</h3>
@@ -198,6 +270,8 @@ const BookingCard = ({ booking, activeFilter, onCancel, onDelete }) => {
                             {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(booking.totalAmount)}
                         </p>
                     </div>
+                    
+                    {/* Phần nút Hành động bây giờ sẽ hoạt động đúng */}
                     <div className="mt-auto pt-4 text-right">
                         <div className="relative inline-block">
                             <button onClick={() => setIsMenuOpen((p) => !p)} className="flex items-center text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md">
@@ -207,37 +281,25 @@ const BookingCard = ({ booking, activeFilter, onCancel, onDelete }) => {
                                 <div onMouseLeave={() => setIsMenuOpen(false)} className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
                                     <ul className="py-1">
                                         <li>
-                                            <button type="button" onClick={() => setIsMenuOpen(false)} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                Xem chi tiết
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsExpanded(p => !p);
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            >
+                                                {isExpanded ? 'Ẩn chi tiết' : 'Xem chi tiết'}
                                             </button>
                                         </li>
                                         {activeFilter === "upcoming" && (
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        onCancel();
-                                                        setIsMenuOpen(false);
-                                                    }}
-                                                    className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                                >
-                                                    Hủy đơn
-                                                </button>
-                                            </li>
+                                            <li><button onClick={() => { onCancel(); setIsMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Hủy đơn</button></li>
                                         )}
                                         {activeFilter === "past" && (
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        onDelete();
-                                                        setIsMenuOpen(false);
-                                                    }}
-                                                    className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                >
-                                                    <FaTrash className="mr-2" /> Xóa khỏi lịch sử
-                                                </button>
-                                            </li>
+                                            <li><button onClick={() => { onDelete(); setIsMenuOpen(false); }} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><FaTrash className="mr-2" /> Xóa khỏi lịch sử</button></li>
+                                        )}
+                                        {(activeFilter === 'ongoing' || activeFilter === 'past') && (
+                                            <li><button className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Yêu cầu hỗ trợ</button></li>
                                         )}
                                     </ul>
                                 </div>
@@ -246,6 +308,8 @@ const BookingCard = ({ booking, activeFilter, onCancel, onDelete }) => {
                     </div>
                 </div>
             </div>
+            
+            {isExpanded && <BookingDetailsInline booking={booking} />}
         </div>
     );
 };

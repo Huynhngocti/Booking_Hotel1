@@ -82,7 +82,7 @@ const SecuritySection = () => {
     const t = toast.loading("Đang đổi mật khẩu...");
     try {
       // Backend: đổi cho endpoint của bạn nếu khác
-      await api.post("/users/change-password", {
+      await api.put("/users/change-password", {
         currentPassword: form.currentPassword,
         newPassword: form.newPassword,
       });

@@ -1,6 +1,9 @@
 import Customer from '../models/Customer.js';
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
+import BookingItem from '../models/BookingItem.js';
+import Room from '../models/Room.js';               
+import RoomType from '../models/RoomType.js'; 
 import db from '../models/index.js';
 import { Op, fn, col, where } from 'sequelize';
 
@@ -27,7 +30,7 @@ export const getAllCustomers = async (req, res) => {
                 model: User,
                 as: 'user',
                 where: {
-                    role: 'Customer' 
+                    role: 'customer' 
                 },
                 required: true
             }],
@@ -79,52 +82,39 @@ export const updateUser = async (req, res) => {
 
 export const getAllBookingsAdmin = async (req, res) => {
     try {
-        const { status, customerName, checkInDate } = req.query;
+        const { status, customerName, startDate, endDate } = req.query;
 
-        let userWhereClause = {}; // Khởi tạo rỗng
+        const bookingWhere = {};
+        if (status) bookingWhere.status = status;
+        // ✅ CẢI TIẾN: Lọc theo khoảng thời gian
+        if (startDate && endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);
+            bookingWhere.checkInDate = {
+                [Op.between]: [new Date(startDate), endOfDay]
+            };
+        }
 
-        // --- SỬA LẠI LOGIC TÌM KIẾM TÊN Ở ĐÂY ---
+        const userWhere = {};
         if (customerName) {
-            // Dùng hàm của Sequelize để ghép cột và tìm kiếm
-            // Nó sẽ tạo ra câu lệnh SQL: WHERE CONCAT(first_name, ' ', last_name) LIKE '%tên người dùng%'
-            userWhereClause = where(
-                fn('CONCAT', col('first_name'), ' ', col('last_name')),
-                { [Op.like]: `%${customerName}%` }
-            );
-        }
-
-        const whereClause = {};
-        if (status) {
-            whereClause.status = status;
-        }
-        if (checkInDate) {
-            whereClause.checkInDate = { [Op.gte]: new Date(checkInDate) };
+            userWhere[Op.or] = [
+                { firstName: { [Op.like]: `%${customerName}%` } },
+                { lastName: { [Op.like]: `%${customerName}%` } },
+                { email: { [Op.like]: `%${customerName}%` } }
+            ];
         }
         
         const bookings = await Booking.findAll({
-            where: whereClause,
+            where: bookingWhere,
             order: [['checkInDate', 'DESC']],
             include: [
                 {
-                    association: 'customer',
-                    required: true,
-                    include: {
-                        association: 'user',
-                        where: userWhereClause, // Áp dụng điều kiện tìm kiếm tên
-                        attributes: ['firstName', 'lastName', 'email'],
-                        required: true,
-                    }
+                    model: Customer, as: 'customer', required: true,
+                    include: { model: User, as: 'user', where: userWhere, required: true, attributes: ['firstName', 'lastName', 'email', 'phone'] }
                 },
                 {
-                    association: 'items',
-                    required: true,
-                    include: {
-                        association: 'room',
-                        include: {
-                            association: 'roomType',
-                            attributes: ['name']
-                        }
-                    }
+                    model: BookingItem, as: 'items', required: true,
+                    include: { model: Room, as: 'room', include: { model: RoomType, as: 'roomType' } }
                 }
             ]
         });
@@ -132,5 +122,81 @@ export const getAllBookingsAdmin = async (req, res) => {
     } catch (error) {
         console.error("Lỗi khi lấy danh sách booking cho admin:", error);
         res.status(500).json({ message: "Lỗi server" });
+    }
+};
+
+export const updateBookingStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const booking = await Booking.findByPk(id, {
+             include: [{ model: Customer, as: 'customer', include: { model: User, as: 'user' }}]
+        });
+        if (!booking) {
+            return res.status(404).json({ message: "Không tìm thấy đơn đặt phòng." });
+        }
+
+        const oldStatus = booking.status;
+        booking.status = status;
+        await booking.save();
+
+        // Nếu chuyển trạng thái sang "Confirmed", gửi email xác nhận
+        if (oldStatus === 'Pending' && status === 'Confirmed') {
+            sendBookingConfirmationEmail(booking); // Gửi email cho khách
+        }
+
+        res.status(200).json(booking);
+    } catch (error) {
+        console.error("Lỗi khi cập nhật trạng thái booking:", error);
+        res.status(500).json({ message: "Lỗi server" });
+    }
+};
+
+export const getAllEmployees = async (req, res) => {
+    try {
+        const employees = await User.findAll({
+            where: {
+                role: 'employee',
+                // Thêm điều kiện để không lấy chính admin đang đăng nhập
+                id: { [Op.ne]: req.user.id } 
+            },
+            attributes: { exclude: ['password'] }
+        });
+        res.status(200).json(employees);
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách nhân viên:", error);
+        res.status(500).json({ message: "Lỗi server." });
+    }
+};
+
+// HÀM MỚI: Tạo tài khoản nhân viên
+export const createEmployee = async (req, res) => {
+    const { firstName, lastName, email, phone, password } = req.body;
+    if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({ message: "Vui lòng điền đầy đủ thông tin." });
+    }
+    try {
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(409).json({ message: 'Email đã được sử dụng.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newEmployee = await User.create({
+            firstName,
+            lastName,
+            email,
+            phone,
+            password: hashedPassword,
+            role: 'employee', // Gán vai trò cố định
+            status: 'Active'
+        });
+
+        const { password: _, ...employeeData } = newEmployee.get({ plain: true });
+        res.status(201).json(employeeData);
+    } catch (error) {
+        console.error("Lỗi khi tạo nhân viên:", error);
+        res.status(500).json({ message: 'Lỗi server khi tạo nhân viên.' });
     }
 };

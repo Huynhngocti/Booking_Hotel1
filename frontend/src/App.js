@@ -11,13 +11,16 @@ import Register from "./pages/Register.jsx";
 import ForgotPassword from "./pages/Forgotpassword.jsx";
 import MyAccount from "./pages/MyAccount";
 import RoomTypeDetailPage from "./pages/RoomTypeDetailPage.jsx";
+import BookingResultPage from "./pages/BookingResultPage.jsx";
 
 // Admin
 import AdminRoute from "./components/Admin/AdminRoute.jsx";
 import AdminLayout from "./pages/Admin/AdminLayout.jsx";
 import CustomerManagement from "./pages/Admin/CustomerManagement.jsx";
+import EmployeeManagement from "./pages/Admin/EmployeeManagement.jsx";
 import RoomListPage from "./pages/Admin/RoomListPage.jsx";
 import RoomTypePage from "./pages/Admin/RoomTypePage.jsx";
+import BookingManagement from "./pages/Admin/BookingManagement.jsx";
 
 // Employee
 import EmployeeRoute from "./routes/EmployeeRoute";
@@ -51,14 +54,17 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/my-account" element={<MyAccount />} />
+                <Route path="/booking-result" element={<BookingResultPage />} />
 
                 {/* Admin block */}
                 <Route element={<AdminRoute />}>
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<Navigate to="rooms" replace />} />
                         <Route path="customers" element={<CustomerManagement />} />
+                        <Route path="employees" element={<EmployeeManagement />} />
                         <Route path="rooms" element={<RoomListPage />} />
                         <Route path="room-types" element={<RoomTypePage />} />
+                        <Route path="bookings" element={<BookingManagement />} />
                     </Route>
                 </Route>
 
