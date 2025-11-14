@@ -1,0 +1,60 @@
+-- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
+--
+-- Host: localhost    Database: hotel_booking
+-- ------------------------------------------------------
+-- Server version	9.3.0
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `booking_items`
+--
+
+DROP TABLE IF EXISTS `booking_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `booking_items` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `booking_id` int NOT NULL,
+  `room_id` int DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL COMMENT 'Giá thuê phòng tại thời điểm đặt',
+  `quantity` int NOT NULL DEFAULT '1' COMMENT 'Số lượng (số đêm)',
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `booking_id` (`booking_id`),
+  KEY `room_id` (`room_id`),
+  CONSTRAINT `booking_items_ibfk_123` FOREIGN KEY (`booking_id`) REFERENCES `booking` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `booking_items_ibfk_124` FOREIGN KEY (`room_id`) REFERENCES `room` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `booking_items`
+--
+
+LOCK TABLES `booking_items` WRITE;
+/*!40000 ALTER TABLE `booking_items` DISABLE KEYS */;
+INSERT INTO `booking_items` VALUES (50,63,1,750000.00,1,'2025-10-07 06:04:53','2025-10-07 06:04:53'),(51,64,5,650000.00,2,'2025-10-07 08:29:36','2025-10-07 08:29:36'),(52,65,1,750000.00,1,'2025-10-11 10:35:34','2025-10-11 10:35:34'),(53,66,1,750000.00,1,'2025-10-11 12:35:18','2025-10-11 12:35:18'),(54,67,1,750000.00,1,'2025-11-09 05:04:04','2025-11-09 05:04:04'),(55,68,1,750000.00,1,'2025-11-09 05:04:24','2025-11-09 05:04:24'),(56,69,1,750000.00,1,'2025-11-09 05:08:52','2025-11-09 05:08:52'),(57,70,1,750000.00,1,'2025-11-09 05:47:28','2025-11-09 05:47:28'),(58,71,1,750000.00,1,'2025-11-14 03:38:31','2025-11-14 03:38:31'),(59,72,6,500000.00,1,'2025-11-14 03:39:21','2025-11-14 03:39:21');
+/*!40000 ALTER TABLE `booking_items` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-11-14 10:51:52
